@@ -1,70 +1,43 @@
-# TWUMVANEee - Rwanda Sign Language Platform
+# TWUMVANE — Rwanda Sign Language Avatar Platform
 
-TWUMVANE is a web-based platform for Rwanda Sign Language (RSL) support. It combines a Flask backend with a browser-based frontend to provide:
-
-- a welcome landing page
-- a text-to-sign translation experience for the TRSL module
-- video upload, management, and playback features
-- a simple admin area for managing translation assets
-
-## Project Overview 
-
-This project is designed to help users interact with sign-language content through a web interface. The main application is served from the project root, while the TRSL functionality is organized under the TRSL folder.
+TWUMVANE is a web-based platform for Rwanda Sign Language (RSL) support. It combines a Flask backend with a browser-based 3D avatar that performs sign-language animations from text you type.
 
 ## Main Features
 
-- Web app powered by Flask
-- Frontend built with HTML, CSS, and JavaScript
-- Video upload and playback support
-- Translation workflow for text-to-sign content
-- Admin page for managing videos and database entries
-- Local storage of videos and metadata in the project folders
+- Flask-powered web app
+- 3D sign-language avatar rendered with Three.js (GLTF)
+- Client-side translation: type a Kinyarwanda word or sentence and the avatar signs each word it knows
+- Word chips showing the animated sign sequence
+- Recent translation history (stored locally in your browser)
 
 ## Technologies Used
 
 - Python
 - Flask
-- Flask-CORS
 - HTML5 / CSS3 / JavaScript
-- JSON for local database storage
-- ffmpeg for video processing and concatenation
-- Werkzeug for file handling
+- Three.js (via CDN)
+- GLTF 3D avatar model
 
 ## Project Structure
 
 ```text
-AVATOR/
+TWUMVANE/
 ├── app.py                  # Main Flask application entry point
 ├── run_twumvane.bat       # Windows batch launcher
 ├── run_twumvane.ps1       # PowerShell launcher
-├── templates/             # Welcome page templates
-├── TRSL/                  # TRSL module
-│   ├── backend/           # Flask backend logic for translation/video handling
-│   ├── frontend/          # Web interface for TRSL
-│   ├── uploads/           # Uploaded videos
-│   ├── videos/            # Stored videos
-│   └── video_database.json
-└── scratch/               # Experimental or helper scripts
+├── templates/             # Welcome page template
+└── TRSL/
+    └── frontend/          # 3D avatar web interface
+        ├── index.html     # Avatar translator page
+        ├── avatar.js      # Avatar player + sign animation registry
+        └── models/        # 3D avatar model (twumvane.glb)
 ```
 
 ## Prerequisites
 
-Before running the project, make sure you have:
-
 - Python 3.8 or newer
 - pip installed
 - Windows PowerShell or Command Prompt
-- ffmpeg installed and available on your PATH
-
-### Install ffmpeg
-
-On Windows, install ffmpeg and make sure the binary is available in your environment.
-
-You can verify it with:
-
-```powershell
-ffmpeg -version
-```
 
 ## First-Time Setup
 
@@ -92,16 +65,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ### 3. Install dependencies
 
-Install the required Python packages:
-
 ```powershell
 pip install flask flask-cors Werkzeug python-dotenv
-```
-
-If you want the TRSL backend dependencies as well, use:
-
-```powershell
-pip install -r TRSL\backend\requirements.txt
 ```
 
 ## How to Run the Project
@@ -116,13 +81,10 @@ py app.py
 
 Then open your browser at:
 
-- http://localhost:5000/
-- http://localhost:5000/trsl/
-- http://localhost:5000/trsl/admin
+- http://localhost:5000/ — Welcome page
+- http://localhost:5000/trsl — 3D avatar translator
 
 ### Option 2: Use the Windows launcher
-
-You can also start the app using the provided scripts:
 
 - Double-click the batch file: run_twumvane.bat
 - Or run it from PowerShell: .\run_twumvane.ps1
@@ -130,37 +92,21 @@ You can also start the app using the provided scripts:
 ## Default Application Routes
 
 - / - Welcome page
-- /trsl/ - TRSL interface
-- /trsl/admin - Admin dashboard
-- /trsl/api/translate - Translation endpoint
-- /trsl/api/videos - Video listing endpoint
+- /trsl - 3D avatar translator
 
-## Notes for First Run
+## Adding New Avatar Signs
 
-- The application will create folders such as uploads and videos when it starts.
-- Video files and database data are stored locally in the TRSL folders.
-- If you are missing certain Python packages, install them before launching the server.
-- If ffmpeg is not installed, video processing features may fail.
+The avatar's animated signs are registered in `TRSL/frontend/avatar.js` under the `SIGN_ANIMATIONS` map. Each entry maps a Kinyarwanda word to an animation clip name inside `twumvane.glb` (the clip name must match exactly, case-sensitive):
 
-## Troubleshooting
+```js
+const SIGN_ANIMATIONS = {
+    'muraho': 'Muraho neza',
+    'amazina': 'Amazina',
+    // add new signs here after re-exporting the model from Blender
+};
+```
 
-### Import errors
+## Notes
 
-If Python reports missing modules, install them again using pip.
-
-### Server does not start
-
-Check that:
-
-- you are in the correct project folder
-- your virtual environment is activated
-- ffmpeg is installed
-- required packages are installed
-
-### Port already in use
-
-If port 5000 is busy, stop the process using that port and try again.
-
-## Summary
-
-TWUMVANE is a Flask-based web platform for Rwanda Sign Language support with a focus on translation, media handling, and a simple admin experience. With the steps above, you should be able to install, run, and explore the project locally on your machine.
+- No internet connection is required for the avatar itself; Three.js and fonts load from CDN.
+- Translation happens entirely in the browser using the sign registry above.

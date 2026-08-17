@@ -21,6 +21,7 @@ const AvatarPlayer = (function () {
     let ready = false;
     let pendingWord = null;
     let gltfAnimations = [];
+    let playbackSpeed = 1;
 
     function normalize(word) {
         return (word || '').trim().toLowerCase();
@@ -127,13 +128,21 @@ const AvatarPlayer = (function () {
         currentAction.reset();
         currentAction.setLoop(THREE.LoopOnce);
         currentAction.clampWhenFinished = true;
+        currentAction.timeScale = playbackSpeed;
         currentAction.play();
         return true;
     }
 
+    // Change how fast the avatar animates (1 = normal speed).
+    function setSpeed(speed) {
+        playbackSpeed = Math.max(0.1, speed || 1);
+        if (currentAction) currentAction.timeScale = playbackSpeed;
+    }
+
     function stop() {
+        pendingWord = null;
         if (currentAction) currentAction.stop();
     }
 
-    return { init, has, playWord, stop };
+    return { init, has, playWord, stop, setSpeed };
 })();
