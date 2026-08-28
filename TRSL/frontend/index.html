@@ -53,27 +53,52 @@
             padding: 0;
         }
 
-        /* Mobile overlay sidebar */
+        /* Mobile overlay sidebar - Extra bright & high contrast */
         @media (max-width: 767px) {
             aside {
                 position: fixed !important;
                 top: 0; left: 0;
-                width: 80vw !important;
+                width: 82vw !important;
                 max-width: 320px;
                 height: 100% !important;
                 z-index: 40;
                 transform: translateX(-100%);
-                box-shadow: 4px 0 30px rgba(0,0,0,0.8);
-                background-color: #161b26 !important;
+                box-shadow: 6px 0 35px rgba(0,0,0,0.85);
+                background-color: #22293a !important;
+                border-right: 1px solid rgba(255,255,255,0.18) !important;
             }
             aside.mobile-open {
                 transform: translateX(0) !important;
+            }
+            aside > div:first-child {
+                background-color: #283145 !important;
+                border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+            }
+            aside #signSearchInput {
+                background-color: #2c364d !important;
+                border-color: #475577 !important;
+                color: #ffffff !important;
+            }
+            aside .lexicon-chip {
+                background-color: #2e3850 !important;
+                border-color: #4c5b80 !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+            aside .recent-item {
+                background-color: #2a3349 !important;
+                border-color: #435172 !important;
+                color: #ffffff !important;
+            }
+            aside > div:last-child {
+                background-color: #1e2434 !important;
+                border-top: 1px solid rgba(255,255,255,0.12) !important;
             }
             /* Semi-transparent backdrop */
             #sidebarBackdrop {
                 display: none;
                 position: fixed; inset: 0;
-                background: rgba(0, 0, 0, 0.65);
+                background: rgba(0, 0, 0, 0.7);
                 z-index: 39;
             }
             #sidebarBackdrop.active { display: block; }
@@ -165,15 +190,6 @@
             .bottom-input-area { padding: 0.75rem 0.75rem 1rem; }
             textarea { font-size: 0.85rem; }
         }
-
-        /* ── Open sidebar button always visible on mobile ── */
-        @media (max-width: 767px) {
-            #sidebarOpenBtn {
-                opacity: 1 !important;
-                scale: 1 !important;
-                pointer-events: auto !important;
-            }
-        }
     </style>
 </head>
 <body class="bg-surface text-gray-200 antialiased h-screen flex overflow-hidden">
@@ -187,8 +203,8 @@
     <aside id="mainSidebar" class="w-80 bg-[#161b26] border-r border-slate-700/70 flex flex-col h-full z-20 shrink-0 shadow-xl">
         <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-700/60 bg-[#181e2b]">
             <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-all active:scale-95 group">
-                <div class="w-10 h-10 rounded-xl overflow-hidden shadow-md group-hover:shadow-primary-500/30 border border-slate-600/70 shrink-0 bg-slate-800 p-0.5">
-                    <img src="logo.jpg" alt="TWUMVANE Logo" class="w-full h-full object-cover rounded-[9px]">
+                <div class="w-11 h-11 rounded-xl bg-white shadow-md p-1 border border-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
+                    <img src="logo.jpg" alt="TWUMVANE" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='/logo.jpg';">
                 </div>
                 <div>
                     <h1 class="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">TWUMVANE<span class="text-primary-400 text-[10px] px-1.5 py-0.5 bg-primary-500/20 rounded font-bold">AVATAR</span></h1>
@@ -587,9 +603,9 @@
                     backdrop.classList.add('active');
                 } else {
                     document.body.classList.remove('sidebar-collapsed');
-                    openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-                    openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
                 }
+                openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
             }
 
             function closeSidebar() {
@@ -598,18 +614,22 @@
                     backdrop.classList.remove('active');
                 } else {
                     document.body.classList.add('sidebar-collapsed');
-                    openSide.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
-                    openSide.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
                 }
+                openSide.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+                openSide.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
             }
 
             closeSide.onclick = closeSidebar;
             openSide.onclick = openSidebar;
             backdrop.addEventListener('click', closeSidebar);
 
-            // Auto-collapse on mobile on load
+            // Initial sidebar state
             if (isMobile()) {
-                closeSidebar(); // sidebar starts hidden on mobile
+                closeSidebar(); // Starts closed on mobile, open button visible
+            } else {
+                // Desktop starts open, open button hidden
+                openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
             }
 
             // Re-evaluate on resize
