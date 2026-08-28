@@ -182,7 +182,7 @@
         }
     </style>
 </head>
-<body class="bg-surface text-gray-200 antialiased h-screen flex overflow-hidden">
+<body class="bg-surface text-gray-200 antialiased h-screen flex overflow-hidden sidebar-collapsed">
 
     <div class="fixed inset-0 pointer-events-none opacity-10 z-0" style="background-image: radial-gradient(#3b82f6 0.5px, transparent 0.5px); background-size: 32px 32px;"></div>
 
@@ -242,8 +242,8 @@
         <!-- Main body shadow overlay when sidebar is open -->
         <div id="mainOverlayShadow" class="cursor-pointer" title="Click to close sidebar"></div>
 
-        <!-- Open sidebar button (always visible; on desktop only shown when collapsed) -->
-        <button id="sidebarOpenBtn" class="fixed top-4 left-4 z-30 w-9 h-9 rounded-xl bg-surface-elevated/90 backdrop-blur border border-surface-border shadow-lg flex items-center justify-center text-gray-300 hover:text-white hover:border-primary-500 transition-all opacity-0 scale-90 pointer-events-none md:top-5 md:left-5">
+        <!-- Open sidebar button (visible on load) -->
+        <button id="sidebarOpenBtn" class="fixed top-4 left-4 z-30 w-9 h-9 rounded-xl bg-surface-elevated/90 backdrop-blur border border-surface-border shadow-lg flex items-center justify-center text-gray-300 hover:text-white hover:border-primary-500 transition-all opacity-100 scale-100 pointer-events-auto md:top-5 md:left-5">
             <i class="fas fa-bars text-sm"></i>
         </button>
 
@@ -576,6 +576,9 @@
             closeSide.onclick = closeSidebar;
             openSide.onclick = openSidebar;
             if (mainShadow) mainShadow.onclick = closeSidebar;
+
+            // Start with sidebar collapsed so the main body/avatar is open on load
+            closeSidebar();
         }
 
         // ── Voice input (Cross-Browser & Microsoft Edge Compatible) ────────
