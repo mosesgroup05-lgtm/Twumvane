@@ -14,7 +14,18 @@ mimetypes.add_type('model/gltf+json', '.gltf')
 # ─── Create the main Flask app ───────────────────────────────────────────────
 app = Flask(__name__, template_folder='templates')
 
-TRSL_FRONTEND = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TRSL', 'frontend')
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+TRSL_FRONTEND = os.path.join(ROOT_DIR, 'TRSL', 'frontend')
+
+# Ensure logo.jpg is also available directly inside TRSL_FRONTEND
+try:
+    src_logo = os.path.join(ROOT_DIR, 'logo.jpg')
+    dst_logo = os.path.join(TRSL_FRONTEND, 'logo.jpg')
+    if os.path.exists(src_logo) and not os.path.exists(dst_logo):
+        import shutil
+        shutil.copy2(src_logo, dst_logo)
+except Exception as e:
+    pass
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -24,6 +35,18 @@ TRSL_FRONTEND = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TRSL',
 def welcome():
     """Serve the welcome page."""
     return render_template('welcome.html')
+
+
+@app.route('/logo.jpg')
+def root_logo():
+    """Serve the platform logo."""
+    return send_from_directory(ROOT_DIR, 'logo.jpg', mimetype='image/jpeg')
+
+
+@app.route('/favicon.ico')
+def root_favicon():
+    """Serve favicon."""
+    return send_from_directory(ROOT_DIR, 'logo.jpg', mimetype='image/jpeg')
 
 
 @app.route('/trsl')
@@ -40,7 +63,7 @@ def trsl_index():
 
 @app.route('/trsl/<path:filename>')
 def trsl_static(filename):
-    """Serve static assets (avatar.js, models, etc.)."""
+    """Serve static assets (avatar.js, models, logo.jpg, etc.)."""
     return send_from_directory(TRSL_FRONTEND, filename)
 
 
