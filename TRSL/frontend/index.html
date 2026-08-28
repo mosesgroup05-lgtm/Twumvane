@@ -36,72 +36,44 @@
 
         body { background: #09090b; font-family: 'Inter', sans-serif; }
 
-        /* ── Sidebar transitions (brighter, clean solid tone) ── */
+        /* ── Unified Sidebar (PC & Mobile) ── */
         aside {
-            background-color: #161b26 !important;
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.25s ease;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(180deg, #191f2c 0%, #131722 100%) !important;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), min-width 0.3s ease, padding 0.3s ease;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 4px 0 24px -2px rgba(0, 0, 0, 0.5);
         }
 
-        /* Desktop collapsed */
         .sidebar-collapsed aside {
             transform: translateX(-100%);
             width: 0 !important;
             min-width: 0 !important;
-            overflow: hidden;
-            border-right: none;
-            padding: 0;
+            max-width: 0 !important;
+            overflow: hidden !important;
+            border-right: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
         }
 
-        /* Mobile overlay sidebar - Extra bright & high contrast */
-        @media (max-width: 767px) {
-            aside {
-                position: fixed !important;
-                top: 0; left: 0;
-                width: 82vw !important;
-                max-width: 320px;
-                height: 100% !important;
-                z-index: 40;
-                transform: translateX(-100%);
-                box-shadow: 6px 0 35px rgba(0,0,0,0.85);
-                background-color: #22293a !important;
-                border-right: 1px solid rgba(255,255,255,0.18) !important;
-            }
-            aside.mobile-open {
-                transform: translateX(0) !important;
-            }
-            aside > div:first-child {
-                background-color: #283145 !important;
-                border-bottom: 1px solid rgba(255,255,255,0.12) !important;
-            }
-            aside #signSearchInput {
-                background-color: #2c364d !important;
-                border-color: #475577 !important;
-                color: #ffffff !important;
-            }
-            aside .lexicon-chip {
-                background-color: #2e3850 !important;
-                border-color: #4c5b80 !important;
-                color: #ffffff !important;
-                font-weight: 600 !important;
-            }
-            aside .recent-item {
-                background-color: #2a3349 !important;
-                border-color: #435172 !important;
-                color: #ffffff !important;
-            }
-            aside > div:last-child {
-                background-color: #1e2434 !important;
-                border-top: 1px solid rgba(255,255,255,0.12) !important;
-            }
-            /* Semi-transparent backdrop */
-            #sidebarBackdrop {
-                display: none;
-                position: fixed; inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                z-index: 39;
-            }
-            #sidebarBackdrop.active { display: block; }
+        .sidebar-collapsed main {
+            margin-left: 0;
+        }
+
+        /* ── Main body shadow overlay when sidebar is open ── */
+        #mainOverlayShadow {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(1px);
+            z-index: 25;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .sidebar-collapsed #mainOverlayShadow {
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
 
         .chat-card {
@@ -117,17 +89,28 @@
         .lexicon-chip {
             display: inline-flex;
             align-items: center;
-            padding: 0.38rem 0.9rem;
+            padding: 0.4rem 0.95rem;
             border-radius: 2rem;
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             font-weight: 600;
-            background: #232a3b;
-            color: #e2e8f0;
+            background: #22293b;
+            color: #f1f5f9;
             border: 1px solid #36415d;
-            transition: all 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             cursor: pointer;
+            user-select: none;
         }
-        .lexicon-chip:hover { background: #3b82f6; border-color: #60a5fa; color: white; transform: translateY(-1px); }
+        .lexicon-chip:hover {
+            background: #2563eb;
+            border-color: #60a5fa;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+        }
+        .lexicon-chip:active {
+            transform: scale(0.95);
+        }
 
         .sequence-chip {
             font-size: 0.8rem;
@@ -157,12 +140,19 @@
         textarea::placeholder { color: #4a4f6e; font-weight: 450; font-size: 0.85rem; }
 
         .recent-item {
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
             cursor: pointer;
-            font-size: 0.7rem;
-            font-weight: 500;
+            user-select: none;
         }
-        .recent-item:hover { background: #1e2438; transform: translateX(2px); }
+        .recent-item:hover {
+            background: #263047 !important;
+            border-color: rgba(59,130,246,0.4) !important;
+            transform: translateX(3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .recent-item:active {
+            transform: scale(0.98);
+        }
 
         .avatar-stage {
             background: radial-gradient(ellipse at center, #10182c 0%, #05070d 70%);
@@ -196,11 +186,8 @@
 
     <div class="fixed inset-0 pointer-events-none opacity-10 z-0" style="background-image: radial-gradient(#3b82f6 0.5px, transparent 0.5px); background-size: 32px 32px;"></div>
 
-    <!-- Mobile sidebar backdrop -->
-    <div id="sidebarBackdrop"></div>
-
     <!-- SIDEBAR -->
-    <aside id="mainSidebar" class="w-80 bg-[#161b26] border-r border-slate-700/70 flex flex-col h-full z-20 shrink-0 shadow-xl">
+    <aside id="mainSidebar" class="w-full max-w-[85vw] sm:max-w-[320px] md:w-80 bg-[#161b26] border-r border-slate-700/70 flex flex-col h-full z-30 shrink-0 shadow-2xl">
         <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-700/60 bg-[#181e2b]">
             <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-all active:scale-95 group">
                 <div class="w-11 h-11 rounded-xl bg-white shadow-md p-1 border border-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
@@ -252,6 +239,9 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        <!-- Main body shadow overlay when sidebar is open -->
+        <div id="mainOverlayShadow" class="cursor-pointer" title="Click to close sidebar"></div>
+
         <!-- Open sidebar button (always visible; on desktop only shown when collapsed) -->
         <button id="sidebarOpenBtn" class="fixed top-4 left-4 z-30 w-9 h-9 rounded-xl bg-surface-elevated/90 backdrop-blur border border-surface-border shadow-lg flex items-center justify-center text-gray-300 hover:text-white hover:border-primary-500 transition-all opacity-0 scale-90 pointer-events-none md:top-5 md:left-5">
             <i class="fas fa-bars text-sm"></i>
@@ -263,10 +253,6 @@
 
                 <!-- Avatar output card -->
                 <div id="avatarCard" class="avatar-stage rounded-2xl overflow-hidden border border-surface-border shadow-2xl relative group w-full aspect-video min-h-[380px] md:min-h-[440px]">
-                    <div id="avatarLoaderOverlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
-                        <div class="w-10 h-10 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mb-3"></div>
-                        <p class="text-[10px] font-mono text-gray-300">loading 3D avatar...</p>
-                    </div>
                     <canvas id="avatarCanvas" class="w-full h-full object-contain"></canvas>
                     <div id="signMissingLabel" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-bold hidden px-6 text-center"></div>
 
@@ -336,37 +322,11 @@
         const avatarCanvas = document.getElementById('avatarCanvas');
         const signMissingLabel = document.getElementById('signMissingLabel');
         const avatarCard = document.getElementById('avatarCard');
-        const loaderOverlay = document.getElementById('avatarLoaderOverlay');
-        const loaderText = loaderOverlay ? loaderOverlay.querySelector('p') : null;
 
         try {
             AvatarPlayer.init(avatarCanvas, 'models/twumvane.glb', {
-                onProgress: (percent, loaded) => {
-                    if (loaderText) {
-                        if (percent > 0) {
-                            loaderText.innerText = `Loading 3D avatar... ${percent}%`;
-                        } else if (loaded > 0) {
-                            loaderText.innerText = `Loading 3D avatar... ${(loaded / (1024 * 1024)).toFixed(1)} MB`;
-                        }
-                    }
-                },
-                onLoad: () => {
-                    if (loaderOverlay) {
-                        loaderOverlay.style.transition = 'opacity 0.35s ease';
-                        loaderOverlay.style.opacity = '0';
-                        setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 350);
-                    }
-                },
                 onError: (err) => {
                     console.error('Avatar failed to load:', err);
-                    if (loaderText) {
-                        const msg = (err && err.message) ? err.message : 'Ensure WebGL and Hardware Acceleration are enabled in your browser.';
-                        loaderText.innerHTML = `
-                            <span class="text-rose-400 font-bold text-xs">Failed to load 3D avatar</span><br>
-                            <span class="text-gray-400 text-[10px] block mt-1 max-w-xs leading-relaxed">${msg}</span>
-                            <button onclick="location.reload()" class="mt-3 px-3 py-1 bg-primary-600 hover:bg-primary-500 text-white rounded text-[10px] font-bold shadow transition">Retry</button>
-                        `;
-                    }
                 }
             });
         } catch (err) {
@@ -417,6 +377,7 @@
             textarea.value = cur + (cur ? ' ' : '') + word;
             textarea.dispatchEvent(new Event('input'));
             textarea.focus();
+            if (typeof closeSidebar === 'function') closeSidebar();
         }
 
         function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
@@ -447,6 +408,7 @@
                     textarea.value = item.text;
                     textarea.dispatchEvent(new Event('input'));
                     translateText();
+                    if (typeof closeSidebar === 'function') closeSidebar();
                 });
             });
         }
@@ -589,57 +551,31 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // ── Sidebar (desktop + mobile) ──────────────────────────────────────
+        // ── Sidebar (Unified PC & Mobile behavior) ─────────────────────────
+        let openSidebar, closeSidebar;
+
         function initSidebar() {
-            const sidebar = document.getElementById('mainSidebar');
             const closeSide = document.getElementById('sidebarCloseBtn');
             const openSide = document.getElementById('sidebarOpenBtn');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            const isMobile = () => window.innerWidth < 768;
+            const mainShadow = document.getElementById('mainOverlayShadow');
 
-            function openSidebar() {
-                if (isMobile()) {
-                    sidebar.classList.add('mobile-open');
-                    backdrop.classList.add('active');
-                } else {
-                    document.body.classList.remove('sidebar-collapsed');
-                }
+            openSidebar = function() {
+                document.body.classList.remove('sidebar-collapsed');
                 openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
                 openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
-            }
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+            };
 
-            function closeSidebar() {
-                if (isMobile()) {
-                    sidebar.classList.remove('mobile-open');
-                    backdrop.classList.remove('active');
-                } else {
-                    document.body.classList.add('sidebar-collapsed');
-                }
+            closeSidebar = function() {
+                document.body.classList.add('sidebar-collapsed');
                 openSide.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
                 openSide.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
-            }
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+            };
 
             closeSide.onclick = closeSidebar;
             openSide.onclick = openSidebar;
-            backdrop.addEventListener('click', closeSidebar);
-
-            // Initial sidebar state
-            if (isMobile()) {
-                closeSidebar(); // Starts closed on mobile, open button visible
-            } else {
-                // Desktop starts open, open button hidden
-                openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
-                openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
-            }
-
-            // Re-evaluate on resize
-            window.addEventListener('resize', () => {
-                if (!isMobile()) {
-                    // Desktop: remove mobile classes
-                    sidebar.classList.remove('mobile-open');
-                    backdrop.classList.remove('active');
-                }
-            });
+            if (mainShadow) mainShadow.onclick = closeSidebar;
         }
 
         // ── Voice input (Cross-Browser & Microsoft Edge Compatible) ────────
@@ -804,14 +740,6 @@
 
         textarea.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
 
-        // Fallback safety timeout for loader overlay if network hangs
-        setTimeout(() => {
-            if (loaderOverlay && !loaderOverlay.classList.contains('hidden')) {
-                loaderOverlay.style.transition = 'opacity 0.35s ease';
-                loaderOverlay.style.opacity = '0';
-                setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 350);
-            }
-        }, 12000);
         init();
     </script>
 </body>
