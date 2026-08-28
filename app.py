@@ -3,8 +3,13 @@ TWUMVANE - Rwanda Sign Language Avatar Platform
 Serves the 3D avatar sign-language translator on http://localhost:5000
 """
 import os
+import mimetypes
 
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, redirect
+
+# Register GLTF/GLB mimetypes to ensure proper content-type headers across all browsers
+mimetypes.add_type('model/gltf-binary', '.glb')
+mimetypes.add_type('model/gltf+json', '.gltf')
 
 # ─── Create the main Flask app ───────────────────────────────────────────────
 app = Flask(__name__, template_folder='templates')
@@ -22,6 +27,11 @@ def welcome():
 
 
 @app.route('/trsl')
+def trsl_redirect():
+    """Redirect /trsl to /trsl/ so relative asset URLs resolve correctly in all browsers."""
+    return redirect('/trsl/', code=302)
+
+
 @app.route('/trsl/')
 def trsl_index():
     """Serve the 3D avatar translator."""
@@ -32,6 +42,17 @@ def trsl_index():
 def trsl_static(filename):
     """Serve static assets (avatar.js, models, etc.)."""
     return send_from_directory(TRSL_FRONTEND, filename)
+
+
+# Fallback routes in case a browser requests relative paths from root /
+@app.route('/avatar.js')
+def root_avatar_js():
+    return send_from_directory(TRSL_FRONTEND, 'avatar.js')
+
+
+@app.route('/models/<path:filename>')
+def root_models(filename):
+    return send_from_directory(os.path.join(TRSL_FRONTEND, 'models'), filename)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -45,7 +66,7 @@ if __name__ == '__main__':
     print()
     print("  Routes:")
     print("    * Welcome page  >>  http://localhost:5000/")
-    print("    * 3D Avatar     >>  http://localhost:5000/trsl")
+    print("    * 3D Avatar     >>  http://localhost:5000/trsl/")
     print()
     print("=" * 65)
     print("  [STARTED] Starting server on http://localhost:5000")

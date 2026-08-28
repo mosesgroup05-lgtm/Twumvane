@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <base href="/trsl/">
     <title>TWUMVANE | 3D Avatar Sign Translator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -234,8 +235,40 @@
     <script>
         const avatarCanvas = document.getElementById('avatarCanvas');
         const signMissingLabel = document.getElementById('signMissingLabel');
+        const avatarCard = document.getElementById('avatarCard');
+        const loaderOverlay = document.getElementById('avatarLoaderOverlay');
+        const loaderText = loaderOverlay ? loaderOverlay.querySelector('p') : null;
+
         try {
-            AvatarPlayer.init(avatarCanvas, 'models/twumvane.glb');
+            AvatarPlayer.init(avatarCanvas, 'models/twumvane.glb', {
+                onProgress: (percent, loaded) => {
+                    if (loaderText) {
+                        if (percent > 0) {
+                            loaderText.innerText = `Loading 3D avatar... ${percent}%`;
+                        } else if (loaded > 0) {
+                            loaderText.innerText = `Loading 3D avatar... ${(loaded / (1024 * 1024)).toFixed(1)} MB`;
+                        }
+                    }
+                },
+                onLoad: () => {
+                    if (loaderOverlay) {
+                        loaderOverlay.style.transition = 'opacity 0.35s ease';
+                        loaderOverlay.style.opacity = '0';
+                        setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 350);
+                    }
+                },
+                onError: (err) => {
+                    console.error('Avatar failed to load:', err);
+                    if (loaderText) {
+                        const msg = (err && err.message) ? err.message : 'Ensure WebGL and Hardware Acceleration are enabled in your browser.';
+                        loaderText.innerHTML = `
+                            <span class="text-rose-400 font-bold text-xs">Failed to load 3D avatar</span><br>
+                            <span class="text-gray-400 text-[10px] block mt-1 max-w-xs leading-relaxed">${msg}</span>
+                            <button onclick="location.reload()" class="mt-3 px-3 py-1 bg-primary-600 hover:bg-primary-500 text-white rounded text-[10px] font-bold shadow transition">Retry</button>
+                        `;
+                    }
+                }
+            });
         } catch (err) {
             console.error('Avatar failed to initialize:', err);
         }
@@ -244,9 +277,6 @@
         let currentIdx = 0;
         let isSigning = false;
         let recentTranslationsQueue = JSON.parse(localStorage.getItem('trsl_recent_avatar') || '[]');
-
-        const avatarCard = document.getElementById('avatarCard');
-        const loaderOverlay = document.getElementById('avatarLoaderOverlay');
         const chipsWrapper = document.getElementById('sequenceChipsWrapper');
         const textarea = document.getElementById('mainTextarea');
         const micBtn = document.getElementById('micInputBtn');
@@ -474,24 +504,45 @@
             };
         }
 
-        // ── Voice input ─────────────────────────────────────────────────────
+        // ── Voice input (Cross-Browser & Microsoft Edge Compatible) ────────
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let micRecognizer = null;
         let isListening = false;
-        let recogLang = 'rw-RW';
+        let isEdge = /Edg\//.test(navigator.userAgent);
+        // Default to rw-RW on standard browsers, but fallback to navigator language or en-US if Edge/services fail
+        let recogLang = isEdge ? (navigator.language || 'en-US') : 'rw-RW';
+        let speechFallbackAttempted = false;
 
         function setMicState(listening) {
             isListening = listening;
             const icon = micBtn.querySelector('i');
             if (listening) {
-                micBtn.classList.add('text-rose-500');
+                micBtn.classList.add('text-rose-500', 'bg-rose-500/10');
                 icon.className = 'fas fa-microphone text-sm animate-pulse';
-                micBtn.title = 'Listening... click to stop';
+                micBtn.title = 'Listening... Click to stop';
             } else {
-                micBtn.classList.remove('text-rose-500');
+                micBtn.classList.remove('text-rose-500', 'bg-rose-500/10');
                 icon.className = 'fas fa-microphone text-sm';
                 micBtn.title = 'Speak to input text';
             }
+        }
+
+        async function requestMicPermission() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Immediately release the tracks so SpeechRecognition has full hardware access
+                    stream.getTracks().forEach(t => t.stop());
+                    return true;
+                } catch (err) {
+                    console.warn('Microphone permission request:', err);
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        showToast('Microphone access denied. Please click the lock icon in the Edge address bar to allow microphone access.', 'error');
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         function stopListening() {
@@ -502,12 +553,21 @@
             setMicState(false);
         }
 
-        function startListening() {
+        function startListening(fresh = true) {
             if (!SpeechRec) {
-                showToast('Speech recognition is not supported in this browser', 'error');
+                showToast('Speech recognition is not supported in this browser. Please use Chrome or Edge.', 'error');
                 return;
             }
+
+            if (fresh) {
+                speechFallbackAttempted = false;
+            }
+
             try {
+                if (micRecognizer) {
+                    try { micRecognizer.abort(); } catch (e) {}
+                }
+
                 const rec = new SpeechRec();
                 micRecognizer = rec;
                 rec.lang = recogLang;
@@ -515,41 +575,70 @@
                 rec.maxAlternatives = 1;
                 rec.continuous = false;
 
+                rec.onstart = () => {
+                    setMicState(true);
+                    showToast(`Listening (${recogLang})... speak now`, 'info');
+                };
+
                 rec.onresult = (e) => {
-                    const transcript = e.results[0][0].transcript.trim();
-                    if (transcript) {
-                        textarea.value = transcript;
-                        textarea.dispatchEvent(new Event('input'));
-                        translateText();
+                    if (e.results && e.results[0] && e.results[0][0]) {
+                        const transcript = e.results[0][0].transcript.trim();
+                        if (transcript) {
+                            textarea.value = transcript;
+                            textarea.dispatchEvent(new Event('input'));
+                            showToast(`Heard: "${transcript}"`, 'info');
+                            translateText();
+                        }
                     }
                 };
 
                 rec.onerror = (e) => {
-                    if (e.error === 'language-not-supported' && recogLang !== 'en-US') {
-                        recogLang = 'en-US';
+                    console.warn('Speech recognition error event:', e.error);
+
+                    // Edge frequently returns 'network' or 'language-not-supported' when an unsupported locale (like rw-RW) is used
+                    if ((e.error === 'language-not-supported' || e.error === 'network' || e.error === 'service-not-allowed') && !speechFallbackAttempted) {
+                        speechFallbackAttempted = true;
+                        recogLang = navigator.language || 'en-US';
+                        console.log('Switching speech recognition language to:', recogLang);
                         stopListening();
-                        startListening();
+                        setTimeout(() => startListening(false), 250);
                         return;
                     }
+
                     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-                        showToast('Microphone access was denied. Please allow it in your browser.', 'error');
+                        showToast('Microphone blocked. Allow microphone in Edge settings (lock icon in URL bar) and Windows Settings.', 'error');
+                    } else if (e.error === 'no-speech') {
+                        showToast('No speech was detected. Please try speaking again.', 'info');
+                    } else if (e.error === 'audio-capture') {
+                        showToast('No microphone found or it is used by another program.', 'error');
+                    } else if (e.error !== 'aborted') {
+                        showToast(`Speech error (${e.error}). Try again.`, 'error');
                     }
+
                     setMicState(false);
                 };
 
-                rec.onend = () => setMicState(false);
+                rec.onend = () => {
+                    setMicState(false);
+                };
 
                 rec.start();
-                setMicState(true);
             } catch (err) {
-                console.error('Speech recognition error:', err);
-                showToast('Could not start speech recognition', 'error');
+                console.error('Speech recognition exception:', err);
+                setMicState(false);
+                showToast('Could not initialize speech recognition. Check microphone settings.', 'error');
             }
         }
 
-        function toggleMic() {
-            if (isListening) stopListening();
-            else startListening();
+        async function toggleMic() {
+            if (isListening) {
+                stopListening();
+            } else {
+                const allowed = await requestMicPermission();
+                if (allowed) {
+                    startListening(true);
+                }
+            }
         }
 
         function init() {
@@ -577,7 +666,14 @@
 
         textarea.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
 
-        setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 4000);
+        // Fallback safety timeout for loader overlay if network hangs
+        setTimeout(() => {
+            if (loaderOverlay && !loaderOverlay.classList.contains('hidden')) {
+                loaderOverlay.style.transition = 'opacity 0.35s ease';
+                loaderOverlay.style.opacity = '0';
+                setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 350);
+            }
+        }, 12000);
         init();
     </script>
 </body>

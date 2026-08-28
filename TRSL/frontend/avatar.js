@@ -31,23 +31,55 @@ const AvatarPlayer = (function () {
         return !!SIGN_ANIMATIONS[normalize(word)];
     }
 
-    function init(canvasEl, modelUrl) {
+    function init(canvasEl, modelUrl, callbacks = {}) {
         canvas = canvasEl;
         clock = new THREE.Clock();
 
         scene = new THREE.Scene();
+
+        const initialWidth = canvas.clientWidth || canvas.parentElement?.clientWidth || 300;
+        const initialHeight = canvas.clientHeight || canvas.parentElement?.clientHeight || 200;
+
         camera = new THREE.PerspectiveCamera(
             35,
-            canvas.clientWidth / canvas.clientHeight || 1,
+            initialWidth / (initialHeight || 1),
             0.1,
             100
         );
         camera.position.set(0, 1.4, 2.3);
         camera.lookAt(0, 1.25, 0);
 
-        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        try {
+            renderer = new THREE.WebGLRenderer({
+                canvas,
+                alpha: true,
+                antialias: true,
+                powerPreference: 'default',
+                failIfMajorPerformanceCaveat: false
+            });
+        } catch (e1) {
+            console.warn('Primary WebGLRenderer creation failed, retrying basic fallback:', e1);
+            try {
+                renderer = new THREE.WebGLRenderer({
+                    canvas,
+                    alpha: true,
+                    antialias: false,
+                    failIfMajorPerformanceCaveat: false
+                });
+            } catch (e2) {
+                console.error('WebGLRenderer initialization failed:', e2);
+                if (callbacks.onError) {
+                    callbacks.onError(new Error('WebGL is not enabled. In Edge/browser settings, enable "Use graphics acceleration when available" (edge://settings/system).'));
+                }
+                return;
+            }
+        }
+
+        if (THREE.sRGBEncoding) {
+            renderer.outputEncoding = THREE.sRGBEncoding;
+        }
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(initialWidth, initialHeight, false);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.3));
         const dir = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -55,52 +87,82 @@ const AvatarPlayer = (function () {
         scene.add(dir);
 
         const loader = new THREE.GLTFLoader();
-        loader.load(
-            modelUrl,
-            (gltf) => {
-                scene.add(gltf.scene);
-                gltfAnimations = gltf.animations;
-                mixer = new THREE.AnimationMixer(gltf.scene);
-                mixer.addEventListener('finished', () => {
-                    if (onFinishedCallback) onFinishedCallback();
-                });
-                ready = true;
-                if (pendingWord) {
-                    const w = pendingWord;
-                    pendingWord = null;
-                    playWord(w, onFinishedCallback);
+
+        const loadWithFallback = (url, isRetry = false) => {
+            loader.load(
+                url,
+                (gltf) => {
+                    scene.add(gltf.scene);
+                    gltfAnimations = gltf.animations || [];
+                    mixer = new THREE.AnimationMixer(gltf.scene);
+                    mixer.addEventListener('finished', () => {
+                        if (onFinishedCallback) onFinishedCallback();
+                    });
+                    ready = true;
+
+                    // Adjust sizing once model is mounted
+                    onResize();
+
+                    if (callbacks.onLoad) callbacks.onLoad(gltf);
+
+                    if (pendingWord) {
+                        const w = pendingWord;
+                        pendingWord = null;
+                        playWord(w, onFinishedCallback);
+                    }
+                },
+                (xhr) => {
+                    if (callbacks.onProgress) {
+                        const percent = xhr.total > 0 ? Math.round((xhr.loaded / xhr.total) * 100) : 0;
+                        callbacks.onProgress(percent, xhr.loaded, xhr.total);
+                    }
+                },
+                (err) => {
+                    console.warn(`Failed loading model from ${url}:`, err);
+                    if (!isRetry && url !== '/trsl/models/twumvane.glb') {
+                        console.log('Retrying model load with /trsl/models/twumvane.glb...');
+                        loadWithFallback('/trsl/models/twumvane.glb', true);
+                    } else {
+                        console.error('Avatar failed to load completely:', err);
+                        if (callbacks.onError) callbacks.onError(new Error('Could not download 3D avatar model (network error or blocked).'));
+                    }
                 }
-            },
-            undefined,
-            (err) => console.error('Avatar failed to load:', err)
-        );
+            );
+        };
+
+        loadWithFallback(modelUrl);
 
         window.addEventListener('resize', onResize);
+        window.addEventListener('load', onResize);
 
-        // Watch the canvas itself for size changes — this is what actually
-        // fixes the black-screen bug: the canvas starts at 0x0 while its
-        // parent has display:none, and a window resize event never fires
-        // when the parent later becomes visible. ResizeObserver catches
-        // that transition directly.
         if (window.ResizeObserver) {
             const ro = new ResizeObserver(() => onResize());
             ro.observe(canvas);
+            if (canvas.parentElement) ro.observe(canvas.parentElement);
         }
+
+        // Trigger onResize at frame intervals to ensure parent CSS flexbox/grid layout is rendered
+        requestAnimationFrame(onResize);
+        setTimeout(onResize, 100);
+        setTimeout(onResize, 500);
 
         animate();
     }
 
     function onResize() {
         if (!renderer || !canvas || !camera) return;
-        if (canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        const width = canvas.clientWidth || canvas.parentElement?.clientWidth || 0;
+        const height = canvas.clientHeight || canvas.parentElement?.clientHeight || 0;
+        if (width === 0 || height === 0) return;
+
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
     }
 
     function animate() {
         requestAnimationFrame(animate);
-        const delta = clock.getDelta();
+        const delta = clock ? clock.getDelta() : 0.016;
         if (mixer) mixer.update(delta);
         if (renderer && scene && camera) renderer.render(scene, camera);
     }
