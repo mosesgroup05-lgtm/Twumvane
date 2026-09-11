@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <base href="/trsl/">
     <title>TWUMVANE | 3D Avatar Sign Translator</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
@@ -32,9 +36,45 @@
 
         body { background: #09090b; font-family: 'Inter', sans-serif; }
 
-        .sidebar-collapsed aside { transform: translateX(-100%); width: 0; min-width: 0; overflow: hidden; border-right: none; padding: 0; }
-        .sidebar-collapsed main { margin-left: 0; }
-        aside { transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.2s; border-right: 1px solid rgba(255,255,255,0.05); }
+        /* ── Unified Sidebar (PC & Mobile) ── */
+        aside {
+            background: linear-gradient(180deg, #191f2c 0%, #131722 100%) !important;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), min-width 0.3s ease, padding 0.3s ease;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 4px 0 24px -2px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-collapsed aside {
+            transform: translateX(-100%);
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden !important;
+            border-right: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .sidebar-collapsed main {
+            margin-left: 0;
+        }
+
+        /* ── Main body shadow overlay when sidebar is open ── */
+        #mainOverlayShadow {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(1px);
+            z-index: 25;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .sidebar-collapsed #mainOverlayShadow {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
 
         .chat-card {
             background: #0f1117;
@@ -49,17 +89,28 @@
         .lexicon-chip {
             display: inline-flex;
             align-items: center;
-            padding: 0.35rem 0.85rem;
+            padding: 0.4rem 0.95rem;
             border-radius: 2rem;
-            font-size: 0.7rem;
+            font-size: 0.74rem;
             font-weight: 600;
-            background: #181b26;
-            color: #cbd5e6;
-            border: 1px solid #2a2f42;
-            transition: all 0.15s;
+            background: #22293b;
+            color: #f1f5f9;
+            border: 1px solid #36415d;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             cursor: pointer;
+            user-select: none;
         }
-        .lexicon-chip:hover { background: #252c3f; border-color: #3b82f6; color: white; transform: translateY(-1px); }
+        .lexicon-chip:hover {
+            background: #2563eb;
+            border-color: #60a5fa;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+        }
+        .lexicon-chip:active {
+            transform: scale(0.95);
+        }
 
         .sequence-chip {
             font-size: 0.8rem;
@@ -89,36 +140,65 @@
         textarea::placeholder { color: #4a4f6e; font-weight: 450; font-size: 0.85rem; }
 
         .recent-item {
-            transition: all 0.15s ease;
+            transition: all 0.2s ease;
             cursor: pointer;
-            font-size: 0.7rem;
-            font-weight: 500;
+            user-select: none;
         }
-        .recent-item:hover { background: #1e2438; transform: translateX(2px); }
+        .recent-item:hover {
+            background: #263047 !important;
+            border-color: rgba(59,130,246,0.4) !important;
+            transform: translateX(3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .recent-item:active {
+            transform: scale(0.98);
+        }
 
         .avatar-stage {
             background: radial-gradient(ellipse at center, #10182c 0%, #05070d 70%);
             min-height: 380px;
         }
+
+        /* ── Speed card responsive ── */
+        #speedMenu {
+            /* default: pops above the button */
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            z-index: 50;
+        }
+        @media (max-width: 400px) {
+            #speedMenu {
+                right: auto;
+                left: 0;
+                min-width: 130px;
+            }
+        }
+
+        /* ── Mobile input area ── */
+        @media (max-width: 767px) {
+            .bottom-input-area { padding: 0.75rem 0.75rem 1rem; }
+            textarea { font-size: 0.85rem; }
+        }
     </style>
 </head>
-<body class="bg-surface text-gray-200 antialiased h-screen flex overflow-hidden">
+<body class="bg-surface text-gray-200 antialiased h-screen flex overflow-hidden sidebar-collapsed">
 
     <div class="fixed inset-0 pointer-events-none opacity-10 z-0" style="background-image: radial-gradient(#3b82f6 0.5px, transparent 0.5px); background-size: 32px 32px;"></div>
 
     <!-- SIDEBAR -->
-    <aside id="mainSidebar" class="w-80 bg-surface-card/95 backdrop-blur-sm border-r border-surface-border flex flex-col h-full z-20 shrink-0">
-        <div class="p-5 flex items-center justify-between border-b border-surface-border/60">
-            <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-all active:scale-95 group">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-md group-hover:shadow-primary-500/20">
-                    <i class="fas fa-robot text-white text-base"></i>
+    <aside id="mainSidebar" class="w-full max-w-[85vw] sm:max-w-[320px] md:w-80 bg-[#161b26] border-r border-slate-700/70 flex flex-col h-full z-30 shrink-0 shadow-2xl">
+        <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-700/60 bg-[#181e2b]">
+            <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-all active:scale-95 group">
+                <div class="w-11 h-11 rounded-xl bg-white shadow-md p-1 border border-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
+                    <img src="logo.jpg" alt="TWUMVANE" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='/logo.jpg';">
                 </div>
                 <div>
-                    <h1 class="text-base font-extrabold tracking-tight text-white">TWUMVANE<span class="text-primary-500">·AVATAR</span></h1>
-                    <p class="text-[9px] font-bold text-gray-500 tracking-wider uppercase">3D sign synthesis</p>
+                    <h1 class="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">TWUMVANE<span class="text-primary-400 text-[10px] px-1.5 py-0.5 bg-primary-500/20 rounded font-bold">AVATAR</span></h1>
+                    <p class="text-[9px] font-bold text-gray-400 tracking-wider uppercase">3D sign synthesis</p>
                 </div>
             </a>
-            <button id="sidebarCloseBtn" class="w-8 h-8 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition flex items-center justify-center">
+            <button id="sidebarCloseBtn" class="w-8 h-8 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white transition flex items-center justify-center">
                 <i class="fas fa-times text-xs"></i>
             </button>
         </div>
@@ -126,59 +206,60 @@
         <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scroll">
             <div>
                 <div class="flex justify-between items-center mb-3 px-1">
-                    <p class="text-[9px] font-black text-gray-500 uppercase tracking-wider">⚡ Animated signs</p>
-                    <span id="dbSignCount" class="text-[9px] font-mono bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full">0 terms</span>
+                    <p class="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5"><span>⚡</span> Animated signs</p>
+                    <span id="dbSignCount" class="text-[9px] font-mono font-bold bg-primary-500/25 text-primary-300 border border-primary-500/30 px-2 py-0.5 rounded-full">0 terms</span>
                 </div>
                 <div class="relative mb-3">
-                    <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-[9px]"></i>
-                    <input type="text" id="signSearchInput" class="w-full bg-surface-elevated/60 border border-surface-border rounded-lg py-1.5 pl-8 pr-2 text-xs text-gray-200 focus:border-primary-500 outline-none transition" placeholder="Search animated signs...">
+                    <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                    <input type="text" id="signSearchInput" class="w-full bg-[#202738] border border-[#333d56] rounded-lg py-1.5 pl-8 pr-2 text-xs text-white placeholder-gray-400 focus:border-primary-500 focus:bg-[#252f44] outline-none transition" placeholder="Search animated signs...">
                 </div>
                 <div id="signsList" class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto custom-scroll pb-1">
-                    <div class="text-center w-full text-[10px] text-gray-600 py-3">loading...</div>
+                    <div class="text-center w-full text-[10px] text-gray-400 py-3">loading...</div>
                 </div>
             </div>
 
             <div class="mt-2">
                 <div class="flex items-center gap-2 mb-3 px-1">
-                    <i class="fas fa-clock text-[9px] text-primary-500"></i>
-                    <p class="text-[9px] font-black text-gray-500 uppercase tracking-wider">Recent translations</p>
+                    <i class="fas fa-clock text-[10px] text-primary-400"></i>
+                    <p class="text-[10px] font-bold text-gray-300 uppercase tracking-wider">Recent translations</p>
                 </div>
                 <div id="recentTranslationsList" class="space-y-1.5 max-h-56 overflow-y-auto custom-scroll pr-1">
-                    <div class="text-center text-[10px] text-gray-600 py-4 italic">No recent translations yet</div>
+                    <div class="text-center text-[10px] text-gray-400 py-4 italic">No recent translations yet</div>
                 </div>
             </div>
         </div>
 
-        <div class="p-4 border-t border-surface-border/60 bg-surface-card/80">
-            <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-primary-500/10 flex items-center justify-center"><i class="fas fa-cube text-primary-400 text-[10px]"></i></div>
-                <div><p class="text-[10px] font-bold">3D Avatar engine</p><p id="translationModeBadge" class="text-[9px] text-gray-500 uppercase">● ready</p></div>
+        <div class="p-4 border-t border-slate-700/60 bg-[#141822]">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-primary-500/20 border border-primary-500/30 flex items-center justify-center"><i class="fas fa-cube text-primary-300 text-xs"></i></div>
+                <div><p class="text-xs font-bold text-gray-200">3D Avatar engine</p><p id="translationModeBadge" class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">● ready</p></div>
             </div>
         </div>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-full relative overflow-hidden">
-        <button id="sidebarOpenBtn" class="fixed top-5 left-5 z-30 w-9 h-9 rounded-xl bg-surface-elevated/90 backdrop-blur border border-surface-border shadow-lg flex items-center justify-center text-gray-300 hover:text-white hover:border-primary-500 transition-all opacity-0 scale-90 pointer-events-none">
+        <!-- Main body shadow overlay when sidebar is open -->
+        <div id="mainOverlayShadow" class="cursor-pointer" title="Click to close sidebar"></div>
+
+        <!-- Open sidebar button (visible on load) -->
+        <button id="sidebarOpenBtn" class="fixed top-4 left-4 z-30 w-9 h-9 rounded-xl bg-surface-elevated/90 backdrop-blur border border-surface-border shadow-lg flex items-center justify-center text-gray-300 hover:text-white hover:border-primary-500 transition-all opacity-100 scale-100 pointer-events-auto md:top-5 md:left-5">
             <i class="fas fa-bars text-sm"></i>
         </button>
 
-        <div class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10 pb-44 flex flex-col">
-            <div id="mainContentCenter" class="max-w-4xl mx-auto w-full transition-all duration-500 flex flex-col my-auto">
+        <!-- Scrollable content area -->
+        <div class="flex-1 overflow-y-auto custom-scroll">
+            <div id="mainContentCenter" class="max-w-4xl mx-auto w-full transition-all duration-500 flex flex-col px-4 py-5 md:px-8 md:py-8 gap-5">
 
                 <!-- Avatar output card -->
-                <div id="avatarCard" class="avatar-stage rounded-2xl overflow-hidden border border-surface-border shadow-2xl relative group aspect-video mb-8">
-                    <div id="avatarLoaderOverlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
-                        <div class="w-10 h-10 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mb-3"></div>
-                        <p class="text-[10px] font-mono text-gray-300">loading 3D avatar...</p>
-                    </div>
+                <div id="avatarCard" class="avatar-stage rounded-2xl overflow-hidden border border-surface-border shadow-2xl relative group w-full aspect-video min-h-[380px] md:min-h-[440px]">
                     <canvas id="avatarCanvas" class="w-full h-full object-contain"></canvas>
                     <div id="signMissingLabel" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-bold hidden px-6 text-center"></div>
 
-                    <div class="absolute inset-x-0 bottom-0 p-4 pt-12 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
+                    <div class="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
                         <div class="flex items-center justify-between pointer-events-auto">
-                            <div><span class="text-[9px] font-bold text-primary-400 uppercase">current sign</span><h3 id="activeWordLabel" class="text-xl font-black tracking-tight">—</h3></div>
-                            <div class="flex gap-2">
+                            <div><span class="text-[9px] font-bold text-primary-400 uppercase">current sign</span><h3 id="activeWordLabel" class="text-lg md:text-xl font-black tracking-tight">—</h3></div>
+                            <div class="flex gap-1.5 md:gap-2">
                                 <button id="prevSignBtn" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:bg-primary-600 disabled:opacity-30"><i class="fas fa-chevron-left text-[10px]"></i></button>
                                 <button id="replaySignBtn" class="w-9 h-9 rounded-xl bg-primary-600 shadow-md hover:bg-primary-500 flex items-center justify-center"><i class="fas fa-rotate text-xs"></i></button>
                                 <button id="nextSignBtn" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:bg-primary-600 disabled:opacity-30"><i class="fas fa-chevron-right text-[10px]"></i></button>
@@ -189,41 +270,47 @@
                     <div class="absolute top-3 right-3 bg-black/50 backdrop-blur px-2 py-1 rounded-lg text-[9px] font-mono"><span id="signIndexIndicator">0/0</span></div>
                 </div>
 
-                <!-- Translation Path Card -->
-                <div id="chipsCard" class="bg-surface-card rounded-xl border border-surface-border p-5 shadow-card transition-all">
+                <!-- ── TYPE BAR (input) — above sign sequence ── -->
+                <div class="w-full">
+                    <div class="chat-card rounded-2xl p-2 flex items-end gap-2 transition-all">
+                        <!-- Speed button -->
+                        <div class="relative shrink-0">
+                            <button id="speedBtn" class="w-9 h-9 rounded-full flex items-center justify-center gap-1 text-gray-400 hover:text-primary-500 transition-all">
+                                <i class="fas fa-gauge-high text-sm"></i>
+                                <span id="speedLabel" class="text-[9px] font-bold">1x</span>
+                            </button>
+                            <div id="speedMenu" class="hidden bg-surface-elevated border border-surface-border rounded-xl shadow-2xl p-1.5 min-w-[120px]">
+                                <button data-speed="0.5"  class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">0.5x — Slow</button>
+                                <button data-speed="0.75" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">0.75x</button>
+                                <button data-speed="1"    class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1x — Normal</button>
+                                <button data-speed="1.25" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1.25x</button>
+                                <button data-speed="1.5"  class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1.5x</button>
+                                <button data-speed="2"    class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">2x — Fast</button>
+                            </div>
+                        </div>
+                        <!-- Mic button -->
+                        <button id="micInputBtn" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-primary-500 transition-all shrink-0"><i class="fas fa-microphone text-sm"></i></button>
+                        <!-- Text area -->
+                        <textarea id="mainTextarea" rows="1" placeholder="Type a Kinyarwanda sentence... e.g. 'muraho mama'" class="flex-1 text-sm py-2 px-1 max-h-28"></textarea>
+                        <!-- Send button -->
+                        <button id="sendTranslateBtn" class="w-10 h-10 rounded-full bg-primary-600 hover:bg-primary-500 shadow-md flex items-center justify-center text-white transition active:scale-95 shrink-0">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-center text-gray-600 mt-2 font-mono tracking-wider">TWUMVANE · 3D Sign Avatar</p>
+                </div>
+
+                <!-- Translation Path Card (Sign sequence) — below type bar -->
+                <div id="chipsCard" class="bg-surface-card rounded-xl border border-surface-border p-4 md:p-5 shadow-card transition-all">
                     <div class="flex items-center justify-center gap-2 mb-4">
                         <div class="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-glow-blue"></div>
                         <span class="text-[9px] font-black text-gray-500 uppercase tracking-wider">Sign sequence</span>
                     </div>
-                    <div id="sequenceChipsWrapper" class="flex flex-wrap gap-3 min-h-[70px] justify-center items-center">
+                    <div id="sequenceChipsWrapper" class="flex flex-wrap gap-2 md:gap-3 min-h-[60px] justify-center items-center">
                         <div class="w-full text-center text-gray-500 text-xs py-3 italic">Enter text → press send → the avatar signs each word it knows</div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- BOTTOM INPUT -->
-        <div class="absolute bottom-0 left-0 right-0 p-5 pt-12 bg-gradient-to-t from-surface via-surface/95 to-transparent pointer-events-none">
-            <div class="max-w-3xl mx-auto w-full pointer-events-auto">
-                <div class="chat-card rounded-2xl p-2 flex items-end gap-2 transition-all">
-                    <div class="relative">
-                        <button id="speedBtn" class="w-9 h-9 rounded-full flex items-center justify-center gap-1.5 text-gray-400 hover:text-primary-500 transition-all"><i class="fas fa-gauge-high text-sm"></i><span id="speedLabel" class="text-[9px] font-bold">1x</span></button>
-                        <div id="speedMenu" class="hidden absolute bottom-10 right-0 bg-surface-elevated border border-surface-border rounded-xl shadow-2xl p-1.5 z-30 min-w-[110px]">
-                            <button data-speed="0.5" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">0.5x — Slow</button>
-                            <button data-speed="0.75" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">0.75x</button>
-                            <button data-speed="1" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1x — Normal</button>
-                            <button data-speed="1.25" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1.25x</button>
-                            <button data-speed="1.5" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">1.5x</button>
-                            <button data-speed="2" class="speed-option w-full text-left px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-300 hover:bg-primary-600 hover:text-white transition">2x — Fast</button>
-                        </div>
-                    </div>
-                    <button id="micInputBtn" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-primary-500 transition-all"><i class="fas fa-microphone text-sm"></i></button>
-                    <textarea id="mainTextarea" rows="1" placeholder="Type a Kinyarwanda sentence... e.g. 'muraho mama'" class="flex-1 text-sm py-2 px-1 max-h-28"></textarea>
-                    <button id="sendTranslateBtn" class="w-10 h-10 rounded-full bg-primary-600 hover:bg-primary-500 shadow-md flex items-center justify-center text-white transition active:scale-95">
-                        <i class="fas fa-paper-plane text-sm"></i>
-                    </button>
-                </div>
-                <p class="text-[9px] text-center text-gray-600 mt-3 font-mono tracking-wider">TWUMVANE · 3D Sign Avatar</p>
             </div>
         </div>
     </main>
@@ -234,8 +321,14 @@
     <script>
         const avatarCanvas = document.getElementById('avatarCanvas');
         const signMissingLabel = document.getElementById('signMissingLabel');
+        const avatarCard = document.getElementById('avatarCard');
+
         try {
-            AvatarPlayer.init(avatarCanvas, 'models/twumvane.glb');
+            AvatarPlayer.init(avatarCanvas, 'models/twumvane.glb', {
+                onError: (err) => {
+                    console.error('Avatar failed to load:', err);
+                }
+            });
         } catch (err) {
             console.error('Avatar failed to initialize:', err);
         }
@@ -244,9 +337,6 @@
         let currentIdx = 0;
         let isSigning = false;
         let recentTranslationsQueue = JSON.parse(localStorage.getItem('trsl_recent_avatar') || '[]');
-
-        const avatarCard = document.getElementById('avatarCard');
-        const loaderOverlay = document.getElementById('avatarLoaderOverlay');
         const chipsWrapper = document.getElementById('sequenceChipsWrapper');
         const textarea = document.getElementById('mainTextarea');
         const micBtn = document.getElementById('micInputBtn');
@@ -287,6 +377,7 @@
             textarea.value = cur + (cur ? ' ' : '') + word;
             textarea.dispatchEvent(new Event('input'));
             textarea.focus();
+            if (typeof closeSidebar === 'function') closeSidebar();
         }
 
         function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
@@ -302,13 +393,13 @@
 
         function renderRecentList() {
             if (recentTranslationsQueue.length === 0) {
-                recentContainer.innerHTML = '<div class="text-center text-[10px] text-gray-600 py-4 italic">No recent translations</div>';
+                recentContainer.innerHTML = '<div class="text-center text-[10px] text-gray-400 py-4 italic">No recent translations</div>';
                 return;
             }
             recentContainer.innerHTML = recentTranslationsQueue.map(item => `
-                <div class="recent-item bg-surface-elevated/30 hover:bg-surface-elevated rounded-lg px-3 py-2 flex items-center justify-between group transition border border-transparent hover:border-surface-border">
-                    <span class="text-[11px] font-medium text-gray-300 truncate max-w-[180px]">${escapeHtml(item.display)}</span>
-                    <i class="fas fa-rotate-right text-[8px] text-gray-500 opacity-0 group-hover:opacity-100 transition"></i>
+                <div class="recent-item bg-[#1e2536] hover:bg-[#273046] rounded-lg px-3 py-2 flex items-center justify-between group transition border border-[#2e3952] hover:border-primary-500/50">
+                    <span class="text-[11px] font-semibold text-gray-200 truncate max-w-[180px]">${escapeHtml(item.display)}</span>
+                    <i class="fas fa-rotate-right text-[9px] text-primary-400 opacity-0 group-hover:opacity-100 transition"></i>
                 </div>
             `).join('');
             document.querySelectorAll('.recent-item').forEach((el, idx) => {
@@ -317,6 +408,7 @@
                     textarea.value = item.text;
                     textarea.dispatchEvent(new Event('input'));
                     translateText();
+                    if (typeof closeSidebar === 'function') closeSidebar();
                 });
             });
         }
@@ -453,45 +545,81 @@
 
         function showToast(msg, type = "info") {
             const toast = document.createElement('div');
-            toast.className = `fixed bottom-28 left-1/2 -translate-x-1/2 bg-gray-900 border ${type === 'error' ? 'border-rose-500' : 'border-primary-500'} text-white text-[10px] px-4 py-2 rounded-full shadow-xl z-[9999] flex gap-2 items-center font-bold`;
+            toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900 border ${type === 'error' ? 'border-rose-500' : 'border-primary-500'} text-white text-[10px] px-4 py-2 rounded-full shadow-xl z-[9999] flex gap-2 items-center font-bold`;
             toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${msg}`;
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
+        // ── Sidebar (Unified PC & Mobile behavior) ─────────────────────────
+        let openSidebar, closeSidebar;
+
         function initSidebar() {
             const closeSide = document.getElementById('sidebarCloseBtn');
             const openSide = document.getElementById('sidebarOpenBtn');
-            closeSide.onclick = () => {
-                document.body.classList.add('sidebar-collapsed');
-                openSide.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
-                openSide.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
-            };
-            openSide.onclick = () => {
+            const mainShadow = document.getElementById('mainOverlayShadow');
+
+            openSidebar = function() {
                 document.body.classList.remove('sidebar-collapsed');
                 openSide.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
                 openSide.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
             };
+
+            closeSidebar = function() {
+                document.body.classList.add('sidebar-collapsed');
+                openSide.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+                openSide.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 320);
+            };
+
+            closeSide.onclick = closeSidebar;
+            openSide.onclick = openSidebar;
+            if (mainShadow) mainShadow.onclick = closeSidebar;
+
+            // Start with sidebar collapsed so the main body/avatar is open on load
+            closeSidebar();
         }
 
-        // ── Voice input ─────────────────────────────────────────────────────
+        // ── Voice input (Cross-Browser & Microsoft Edge Compatible) ────────
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let micRecognizer = null;
         let isListening = false;
-        let recogLang = 'rw-RW';
+        let isEdge = /Edg\//.test(navigator.userAgent);
+        // Default to rw-RW on standard browsers, but fallback to navigator language or en-US if Edge/services fail
+        let recogLang = isEdge ? (navigator.language || 'en-US') : 'rw-RW';
+        let speechFallbackAttempted = false;
 
         function setMicState(listening) {
             isListening = listening;
             const icon = micBtn.querySelector('i');
             if (listening) {
-                micBtn.classList.add('text-rose-500');
+                micBtn.classList.add('text-rose-500', 'bg-rose-500/10');
                 icon.className = 'fas fa-microphone text-sm animate-pulse';
-                micBtn.title = 'Listening... click to stop';
+                micBtn.title = 'Listening... Click to stop';
             } else {
-                micBtn.classList.remove('text-rose-500');
+                micBtn.classList.remove('text-rose-500', 'bg-rose-500/10');
                 icon.className = 'fas fa-microphone text-sm';
                 micBtn.title = 'Speak to input text';
             }
+        }
+
+        async function requestMicPermission() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Immediately release the tracks so SpeechRecognition has full hardware access
+                    stream.getTracks().forEach(t => t.stop());
+                    return true;
+                } catch (err) {
+                    console.warn('Microphone permission request:', err);
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        showToast('Microphone access denied. Please click the lock icon in the Edge address bar to allow microphone access.', 'error');
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         function stopListening() {
@@ -502,12 +630,21 @@
             setMicState(false);
         }
 
-        function startListening() {
+        function startListening(fresh = true) {
             if (!SpeechRec) {
-                showToast('Speech recognition is not supported in this browser', 'error');
+                showToast('Speech recognition is not supported in this browser. Please use Chrome or Edge.', 'error');
                 return;
             }
+
+            if (fresh) {
+                speechFallbackAttempted = false;
+            }
+
             try {
+                if (micRecognizer) {
+                    try { micRecognizer.abort(); } catch (e) {}
+                }
+
                 const rec = new SpeechRec();
                 micRecognizer = rec;
                 rec.lang = recogLang;
@@ -515,41 +652,70 @@
                 rec.maxAlternatives = 1;
                 rec.continuous = false;
 
+                rec.onstart = () => {
+                    setMicState(true);
+                    showToast(`Listening (${recogLang})... speak now`, 'info');
+                };
+
                 rec.onresult = (e) => {
-                    const transcript = e.results[0][0].transcript.trim();
-                    if (transcript) {
-                        textarea.value = transcript;
-                        textarea.dispatchEvent(new Event('input'));
-                        translateText();
+                    if (e.results && e.results[0] && e.results[0][0]) {
+                        const transcript = e.results[0][0].transcript.trim();
+                        if (transcript) {
+                            textarea.value = transcript;
+                            textarea.dispatchEvent(new Event('input'));
+                            showToast(`Heard: "${transcript}"`, 'info');
+                            translateText();
+                        }
                     }
                 };
 
                 rec.onerror = (e) => {
-                    if (e.error === 'language-not-supported' && recogLang !== 'en-US') {
-                        recogLang = 'en-US';
+                    console.warn('Speech recognition error event:', e.error);
+
+                    // Edge frequently returns 'network' or 'language-not-supported' when an unsupported locale (like rw-RW) is used
+                    if ((e.error === 'language-not-supported' || e.error === 'network' || e.error === 'service-not-allowed') && !speechFallbackAttempted) {
+                        speechFallbackAttempted = true;
+                        recogLang = navigator.language || 'en-US';
+                        console.log('Switching speech recognition language to:', recogLang);
                         stopListening();
-                        startListening();
+                        setTimeout(() => startListening(false), 250);
                         return;
                     }
+
                     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-                        showToast('Microphone access was denied. Please allow it in your browser.', 'error');
+                        showToast('Microphone blocked. Allow microphone in Edge settings (lock icon in URL bar) and Windows Settings.', 'error');
+                    } else if (e.error === 'no-speech') {
+                        showToast('No speech was detected. Please try speaking again.', 'info');
+                    } else if (e.error === 'audio-capture') {
+                        showToast('No microphone found or it is used by another program.', 'error');
+                    } else if (e.error !== 'aborted') {
+                        showToast(`Speech error (${e.error}). Try again.`, 'error');
                     }
+
                     setMicState(false);
                 };
 
-                rec.onend = () => setMicState(false);
+                rec.onend = () => {
+                    setMicState(false);
+                };
 
                 rec.start();
-                setMicState(true);
             } catch (err) {
-                console.error('Speech recognition error:', err);
-                showToast('Could not start speech recognition', 'error');
+                console.error('Speech recognition exception:', err);
+                setMicState(false);
+                showToast('Could not initialize speech recognition. Check microphone settings.', 'error');
             }
         }
 
-        function toggleMic() {
-            if (isListening) stopListening();
-            else startListening();
+        async function toggleMic() {
+            if (isListening) {
+                stopListening();
+            } else {
+                const allowed = await requestMicPermission();
+                if (allowed) {
+                    startListening(true);
+                }
+            }
         }
 
         function init() {
@@ -577,7 +743,6 @@
 
         textarea.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
 
-        setTimeout(() => { loaderOverlay.classList.add('hidden'); }, 4000);
         init();
     </script>
 </body>
