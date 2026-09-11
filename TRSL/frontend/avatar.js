@@ -49,7 +49,6 @@ const SIGN_ANIMATIONS = {
     'amateke' : 'Amateke',
     'amarinete' : 'Amarinete',
     'agapfukamunwa' : 'Agapfukamunwa',
-    
     'shufureri' : 'Shufureri'
 };
 
