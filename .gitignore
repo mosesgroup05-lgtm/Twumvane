@@ -1,0 +1,33 @@
+# ================================
+# TWUMVANE - Large / Generated Data
+# ================================
+
+# Raw sign-language videos
+RSL/data/raw_videos/
+
+# Extracted landmarks / training data
+RSL/data/landmarks/
+RSL/data/landmarks.zip
+
+# Large 3D model files
+TRSL/frontend/models/*.glb
+TRSL/frontend/models/*.fbx
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
