@@ -3,53 +3,87 @@
 // Add a new line here every time you animate a new sign in Blender
 // and re-export avatar.glb (clip name must match exactly, case-sensitive).
 const SIGN_ANIMATIONS = {
-    'muraho': 'Muraho neza',
-    'amazina': 'Amazina',
-    'mama': 'Mama',
-    'papa': 'Papa',
-    'nitwa': 'Nitwa',
-    'ntuye': 'Ntuye',
-    'ndagukunda': 'Ndagukunda',
-    'nshaka': 'Nshaka',
-    'imana': 'Imana',
-    'wambaye': 'Wambaye',
-    'neza': 'Neza',
-    'umukandara': 'Umukandara',
-    'ukwezi' : 'Ukwezi',
-    'shufureri' : 'Shufureri',
-    'n' : 'N',
-    'm' : 'M',
-    'ishati' : 'Ishati',
-    'isombe' : 'Isombe',
-    'isengeri' : 'Isengeri',
-    'isakoshi' : 'Isakoshi',
-    'ipantaro' : 'Ipantaro',
-    'inkweto za shinga' : 'Inkweto za shinga',
-    'inkweto' : 'Inkweto',
-    'ingofero' : 'Ingofero',
-    'imyambaro' : 'Imyambaro',
-    'imiteja' : 'Imiteja',
-    'ikariso' : 'Ikariso',
-    'ijipo' : 'Ijipo',
-    'igitsina gore' : 'Igistina gore',
-    'igitsina gabo' : 'Igitsina gabo',
-    'igitoki' : 'Igitoki',
-    'ibitunguru' : 'Ibitunguru',
-    'ibitenge' : 'Ibitenge',
-    'ibihaza' : 'Ibihaza',
-    'h' : 'H',
-    'p' : 'P',
-    'k' : 'K',
-    'karoti' : 'Karoti',
-    'g' : 'G',
-    'karuvati' : 'Karuvati',
-    'kwisiga' : 'Kwisiga',
-    'gutekesha' : 'Gutekesha',
-    'dodo' : 'Dodo',
-    'amateke' : 'Amateke',
-    'amarinete' : 'Amarinete',
-    'agapfukamunwa' : 'Agapfukamunwa',
-    'shufureri' : 'Shufureri'
+    'ishuri': 'ishuri',
+    'deregiteri': 'deregiteri',
+    'mwarimu': 'mwarimu.',
+    'umunyeshuri': 'umunyeshuri',
+    'animateur': 'animateur',
+    'animatrice': 'animatrice',
+    'contable': 'contable',
+    'ikayi': 'ikayi',
+    'igitabo': 'igitabo',
+    'ikaramu': 'ikaramu',
+    'kereyo': 'kereyo',
+    'late': 'Late',
+    'gome': 'gome',
+    'buwate': 'buwate',
+    'urupapuro': 'urupapuro',
+    'imyenda': 'Imyenda',
+    'imyenda yishuri': 'Imyenda yishuri',
+    'igikapu': 'igikapu',
+    'icyibaho': 'icyibaho',
+    'ingwa': 'ingwa',
+    'intebe yishuri': "intebe y'ishuri",
+    'igitsina': 'igitsina',
+    'umucuruzi': 'umucuruzi',
+    'abagore': 'abagore',
+    'igitambaro': 'igitambaro',
+    'kwambara': 'kwambara',
+    'umutwe': 'umutwe',
+    'isutiye': 'isutiye',
+    'inkweto': 'Inkweto',
+    'kugira': 'kugira',
+    'gushaka': 'gushaka',
+    'kurya': 'kurya',
+    'kunywa': 'kunywa',
+    'inshinga': 'inshinga',
+    'interuro': 'interuro',
+    'njyewe': 'njyewe',
+    'hehe': 'Hehe',
+    'gute': 'gute',
+    'inde': 'inde',
+    'ryari': 'ryari',
+    'wowe ugiye hehe': 'wowe ugiye hehe',
+    'wowe': 'wowe',
+    'umeze ute': 'umeze ute',
+    'uzaza': 'uzaza',
+    'uzagenda': 'uzagenda',
+    'h': 'H',
+    'i': 'I',
+    'j': 'J',
+    'k': 'K',
+    'l': 'L',
+    'babyara bacu': 'babyara bacu',
+    'tutibagiwe': 'tutibagiwe',
+    'ababyeyi bakuru': 'ababyeyi bakuru',
+    'sogokuru': 'sogokuru',
+    'nyogokuru': 'nyogokuru',
+    'murakoze': 'murakoze',
+    'cyane': 'cyane',
+    'gukora': 'gukora',
+    'ariko': 'ariko',
+    'dushimira': 'dushimira',
+    'barangije': 'barangije',
+    'gukunda': 'gukunda',
+    'mfite': 'mfite',
+    'menshi': 'menshi',
+    'amafaranga': 'amafaranga',
+    'igihugu': 'igihugu',
+    'abanyarwanda': 'abanyarwanda',
+    'urwanda': 'urwanda',
+    'm': 'M',
+    'n': 'N',
+    'p': 'p',
+    'b': 'b',
+    'shufureri': 'Shufureri',
+    'gutekesha': 'Gutekesha',
+    'amateke': 'Amateke',
+    'imiteja': 'Imiteja',
+    'ibitenge': 'Ibitenge',
+    'ijipo': 'ijipo',
+    'inkweto za shinga': 'Inkweto za shinga',
+    'ikariso': 'Ikariso',
+    'ishakoshi': 'Isakoshi'
 };
 
 const AvatarPlayer = (function () {
@@ -65,8 +99,16 @@ const AvatarPlayer = (function () {
         return (word || '').trim().toLowerCase();
     }
 
+    function getClipName(word) {
+        const norm = normalize(word);
+        if (SIGN_ANIMATIONS[norm]) return SIGN_ANIMATIONS[norm];
+        const clean = norm.replace(/[.']/g, '');
+        if (SIGN_ANIMATIONS[clean]) return SIGN_ANIMATIONS[clean];
+        return null;
+    }
+
     function has(word) {
-        return !!SIGN_ANIMATIONS[normalize(word)];
+        return !!getClipName(word);
     }
 
     function init(canvasEl, modelUrl, callbacks = {}) {
@@ -207,7 +249,7 @@ const AvatarPlayer = (function () {
 
     // Returns true if this word has an avatar animation and playback started.
     function playWord(word, onFinished) {
-        const clipName = SIGN_ANIMATIONS[normalize(word)];
+        const clipName = getClipName(word);
         if (!clipName) return false;
 
         onFinishedCallback = onFinished || null;
@@ -217,7 +259,15 @@ const AvatarPlayer = (function () {
             return true; // will play as soon as the model finishes loading
         }
 
-        const clip = THREE.AnimationClip.findByName(gltfAnimations, clipName);
+        let clip = THREE.AnimationClip.findByName(gltfAnimations, clipName);
+        if (!clip) {
+            const target = (clipName || '').trim().toLowerCase();
+            const cleanTarget = target.replace(/[.']/g, '');
+            clip = gltfAnimations.find(a => {
+                const aName = (a.name || '').trim().toLowerCase();
+                return aName === target || aName.replace(/[.']/g, '') === cleanTarget;
+            });
+        }
         if (!clip) {
             console.warn('Animation clip not found in GLB:', clipName);
             return false;
