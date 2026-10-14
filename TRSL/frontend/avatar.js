@@ -74,7 +74,6 @@ const SIGN_ANIMATIONS = {
     'm': 'M',
     'n': 'N',
     'p': 'p',
-    'b': 'b',
     'shufureri': 'Shufureri',
     'gutekesha': 'Gutekesha',
     'amateke': 'Amateke',
