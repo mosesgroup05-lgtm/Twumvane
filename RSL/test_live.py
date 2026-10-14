@@ -29,6 +29,20 @@ import mediapipe as mp
 import tensorflow as tf
 from collections import deque
 
+# Compatibility fix: allow old-format H5 checkpoints (saved on an older
+# Keras) to load on Keras 3.x, which rejects the legacy `time_major`gfgfgfgfg
+# kwarg that Keras itself wrote into the saved config.
+from keras.src.layers.rnn.lstm import LSTM as _LSTM
+_orig_lstm_init = _LSTM.__init__
+
+
+def _patched_lstm_init(self, *args, **kwargs):
+    kwargs.pop("time_major", None)
+    _orig_lstm_init(self, *args, **kwargs)
+
+
+_LSTM.__init__ = _patched_lstm_init
+
 # ---------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------

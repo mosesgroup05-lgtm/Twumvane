@@ -7,7 +7,7 @@ TWUMVANE is a web-based platform for Rwanda Sign Language (RSL) support. It comb
 - Flask-powered web app
 - 3D sign-language avatar rendered with Three.js (GLTF)
 - Client-side translation: type a Kinyarwanda word or sentence and the avatar signs each word it knows
-- Word chips showing the animated sign sequence
+- Word chips showing the animated sign sequence dfgdfdgdf
 - Recent translation history (stored locally in your browser)
 
 ## Technologies Used
@@ -110,3 +110,20 @@ const SIGN_ANIMATIONS = {
 
 - No internet connection is required for the avatar itself; Three.js and fonts load from CDN.
 - Translation happens entirely in the browser using the sign registry above.
+
+
+## TO RUN THE TRSL IN MY MACBOOK
+
+source .venv/bin/activate
+
+python app.py
+
+
+
+
+
+cd ..
+source .venv/bin/activate
+
+cd RSL
+python test_live.py

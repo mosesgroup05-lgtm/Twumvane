@@ -38,7 +38,7 @@ from tensorflow.keras.utils import to_categorical
 
 # ---------------------------------------------------------------
 # CONFIG
-# ---------------------------------------------------------------
+# ---------------------------------------------------------------fdfdfd
 LANDMARKS_DIR = os.path.join("data", "landmarks")
 MODELS_DIR = "models"
 SEQUENCE_LENGTH = 30
